@@ -16,6 +16,7 @@ func HandleHttp() {
 
 	mux.HandleFunc(fmt.Sprintf("%s/arcs", root), controllers.GetArcs)
 	mux.HandleFunc(fmt.Sprintf("%s/chapters/id/", root), controllers.DownloadChapter)
+	mux.HandleFunc(fmt.Sprintf("%s/settings", root), controllers.SaveSettings)
 
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
@@ -23,7 +24,7 @@ func HandleHttp() {
 func enableCors(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-		w.Header().Set("Access-Control-Allow-Methods", "GET")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 		next.ServeHTTP(w, r)
