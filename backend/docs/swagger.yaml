@@ -1,0 +1,178 @@
+basePath: /
+definitions:
+  controllers.SavedDirectory:
+    properties:
+      chapterName:
+        type: string
+      chapterNumber:
+        type: integer
+      path:
+        type: string
+    type: object
+  models.Arc:
+    properties:
+      entries:
+        items:
+          $ref: '#/definitions/models.OPTEntry'
+        type: array
+      name:
+        type: string
+    type: object
+  models.OPTEntry:
+    properties:
+      date:
+        type: string
+      id:
+        type: integer
+      is_available:
+        type: boolean
+      name:
+        type: string
+      number:
+        type: integer
+      pages:
+        type: integer
+    type: object
+  models.Settings:
+    properties:
+      id:
+        type: string
+      telegramChatId:
+        type: string
+      telegramToken:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a web api server.
+  title: Web Opt Mangadownloader API
+  version: "1.0"
+paths:
+  /api/arcs:
+    get:
+      consumes:
+      - application/json
+      description: delivers Arcs from OPT
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Arc'
+            type: array
+      summary: fetches Arcs from OPT
+      tags:
+      - arcs
+  /api/chapters/id/{selectedChapter}:
+    post:
+      consumes:
+      - application/json
+      description: downloads chapter from OPT
+      parameters:
+      - description: Selected Chapter
+        in: path
+        name: selectedChapter
+        required: true
+        type: string
+      - description: should download local
+        in: query
+        name: local
+        type: string
+      - description: should send to telegram chat
+        in: query
+        name: telegram
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controllers.SavedDirectory'
+      summary: downloads chapter from OPT
+      tags:
+      - chapter
+  /api/health:
+    get:
+      consumes:
+      - application/json
+      description: Get server health status
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Health check
+      tags:
+      - health
+  /api/settings:
+    get:
+      consumes:
+      - application/json
+      description: Saved settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Settings'
+      summary: saved settings
+      tags:
+      - settings
+    post:
+      consumes:
+      - application/json
+      description: Save your settings
+      parameters:
+      - description: Settings to save
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/models.Settings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Settings'
+      summary: saves settings
+      tags:
+      - settings
+  /api/settings/id/{settingsId}:
+    put:
+      consumes:
+      - application/json
+      description: Updates your settings
+      parameters:
+      - description: Updated Settings
+        in: path
+        name: settingsId
+        required: true
+        type: string
+      - description: Settings to update
+        in: body
+        name: settings
+        required: true
+        schema:
+          $ref: '#/definitions/models.Settings'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Settings'
+      summary: updates settings
+      tags:
+      - settings
+swagger: "2.0"

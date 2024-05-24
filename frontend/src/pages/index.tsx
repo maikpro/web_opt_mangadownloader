@@ -1,5 +1,5 @@
 'use client';
-import { SetStateAction, useEffect, useState } from 'react';
+import { ChangeEvent, SetStateAction, useEffect, useState } from 'react';
 
 import { Arc } from '../app/models/Arc';
 
@@ -8,18 +8,33 @@ export default function Home() {
     const [selectedChapter, setSelectedChapter] = useState('');
     const [isDownload, setIsDownload] = useState<boolean>(false);
     const [savedPath, setSavedPath] = useState<any>('');
+    const [isLocal, setLocal] = useState<boolean>(true);
+    const [isTelegram, setTelegram] = useState<boolean>(true);
 
     useEffect(() => {
         const fetchArcs = async () => {
-            const response = await fetch('http://localhost:8080/api/arcs');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/arcs`
+            );
             const arcs: Arc[] = await response.json();
             setArcs(arcs);
             setSelectedChapter('' + arcs[0].entries[0].number);
         };
         fetchArcs();
+        const value = process.env.NEXT_PUBLIC_API_URL;
+        console.log(value);
     }, []);
 
-    // Handler function to update the selected value
+    const handleTelegramChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const { checked } = event.target;
+        setTelegram(checked);
+    };
+
+    const handleLocalChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const { checked } = event.target;
+        setLocal(checked);
+    };
+
     const handleSelectChange = (event: {
         target: { value: SetStateAction<string> };
     }) => {
@@ -32,16 +47,25 @@ export default function Home() {
             console.error('No Chapter selected...');
             return;
         }
-        console.log('You have selected: ', selectedChapter);
+        console.log(
+            `You have selected chapter '${selectedChapter}', isLocal '${isLocal}', isTelegram ${isTelegram} `
+        );
         const response = await fetch(
-            `http://localhost:8080/api/chapters/id/${selectedChapter}`,
+            `${process.env.NEXT_PUBLIC_API_URL}/chapters/id/${selectedChapter}?local=${isLocal}&telegram=${isTelegram}`,
             { method: 'POST' }
         );
-        const path = await response.json();
-        console.log(path);
-        setSavedPath(path);
-        if (path) {
+
+        if (response.ok) {
             setIsDownload(false);
+        }
+
+        if (response.ok && isLocal) {
+            const path = await response.json();
+            console.log(path);
+            setSavedPath(path);
+            if (path) {
+                setIsDownload(false);
+            }
         }
     };
 
@@ -70,6 +94,32 @@ export default function Home() {
                             </optgroup>
                         ))}
                     </select>
+                    <div className="w-full flex justify-between">
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="isLocal"
+                                checked={isLocal}
+                                onChange={handleLocalChange}
+                                disabled={isDownload}
+                            />
+                            <label className="ml-2">
+                                Download on your local drive?
+                            </label>
+                        </div>
+                        <div>
+                            <input
+                                type="checkbox"
+                                name="isTelegram"
+                                checked={isTelegram}
+                                onChange={handleTelegramChange}
+                                disabled={isDownload}
+                            />
+                            <label className="ml-2">
+                                Send to your Telegram Chat
+                            </label>
+                        </div>
+                    </div>
                     <button
                         onClick={handleDownload}
                         className={`w-full max-w-40 bg-violet-500 hover:bg-violet-600 text-white font-bold py-2 px-4 rounded flex w-200 justify-center items-center ${
@@ -100,9 +150,15 @@ export default function Home() {
                     </button>
                 </div>
             ) : (
-                <p className="text-red-500">
-                    Problem fetching chapters from onepiece-tube.com...
-                </p>
+                <div className="flex items-center">
+                    <p className="text-red-500">
+                        <svg
+                            className="animate-spin border-white-400 rounded-full h-4 w-4 border-b-2 mr-2"
+                            viewBox="0 0 20 20"
+                        ></svg>
+                        fetching chapters from onepiece-tube.com...
+                    </p>
+                </div>
             )}
 
             <p className="text-green-500">{savedPath.path}</p>

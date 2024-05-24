@@ -7,8 +7,8 @@ import (
 	"time"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	"github.com/maikpro/web_opt_mangadownloader/database"
 	"github.com/maikpro/web_opt_mangadownloader/models"
-	"github.com/maikpro/web_opt_mangadownloader/util"
 )
 
 func SendChapter(chapter models.Chapter) error {
@@ -46,75 +46,38 @@ func getBot() (*tgbotapi.BotAPI, error) {
 		return nil, err
 	}
 
-	bot, err := tgbotapi.NewBotAPI(telegramAPITokenString)
+	bot, err := tgbotapi.NewBotAPI(*telegramAPITokenString)
 	if err != nil {
 		log.Fatal(err)
 		return nil, err
 	}
 
-	// bot.Debug = true
-	// log.Printf("Authorized on account %s", bot.Self.UserName)
-
-	// check for Telegram chat updates with goroutine
-	go func() error {
-		update := tgbotapi.NewUpdate(0)
-		update.Timeout = 60
-
-		updates, err := bot.GetUpdatesChan(update)
-		if err != nil {
-			log.Fatal(err)
-			return err
-		}
-
-		for update := range updates {
-			if update.Message == nil { // ignore any non-Message updates
-				continue
-			}
-
-			if update.Message.Text != "" {
-				messageText := update.Message.Text
-				log.Printf("chatId: [%d] Username: [%s] message: %s", update.Message.Chat.ID, update.Message.From.UserName, messageText)
-				listenForCommands(bot, messageText)
-			}
-		}
-		return nil
-	}()
-
 	return bot, nil
 }
 
-func listenForCommands(bot *tgbotapi.BotAPI, messageText string) {
-	switch messageText {
-	case "!img":
-		sendImage(bot, "./upload/image.jpg")
-	case "!health":
-		sendMessage(bot, "I'm alive! 🥳💚")
-	default:
-		sendMessage(bot, "no comment found!")
+func getToken() (*string, error) {
+	settings, err := database.GetSettings()
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
 	}
+
+	return &settings.TelegramToken, nil
 }
 
-func getToken() (string, error) {
-	telegramAPITokenString, err := util.GetEnvString("TELEGRAM_BOT_TOKEN")
+func getChatId() (*int64, error) {
+	settings, err := database.GetSettings()
 	if err != nil {
-		return "", err
+		log.Fatal(err)
+		return nil, err
 	}
 
-	return telegramAPITokenString, nil
-}
-
-func getChatId() (int64, error) {
-	chatIdString, err := util.GetEnvString("TELEGRAM_CHAT_ID")
+	chatId, err := strconv.ParseInt(settings.TelegramChatId, 10, 64)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 
-	chatId, err := strconv.ParseInt(chatIdString, 10, 64)
-	if err != nil {
-		return 0, err
-	}
-
-	return chatId, nil
+	return &chatId, nil
 }
 
 func sendMessage(bot *tgbotapi.BotAPI, text string) error {
@@ -124,27 +87,8 @@ func sendMessage(bot *tgbotapi.BotAPI, text string) error {
 		return err
 	}
 
-	msg := tgbotapi.NewMessage(chatId, text)
+	msg := tgbotapi.NewMessage(*chatId, text)
 	bot.Send(msg)
-	sleep(5500)
-	return nil
-}
-
-func sendImage(bot *tgbotapi.BotAPI, fullPath string) error {
-	log.Println("Sending Image...")
-
-	chatId, err := getChatId()
-	if err != nil {
-		log.Fatal(err)
-		return err
-	}
-
-	photoConfig := tgbotapi.NewPhotoUpload(chatId, fullPath)
-	msg, err := bot.Send(photoConfig)
-	if err != nil {
-		log.Fatal("Error sending photo:", err)
-	}
-	log.Printf("Photo sent with message ID: %d", msg.MessageID)
 	sleep(5500)
 	return nil
 }
@@ -162,7 +106,7 @@ func sendMediaGroup(bot *tgbotapi.BotAPI, mediaGroup []interface{}) error {
 			end = len(mediaGroup)
 		}
 		chunk := mediaGroup[i:end]
-		mediaGroupConfig := tgbotapi.NewMediaGroup(chatId, chunk)
+		mediaGroupConfig := tgbotapi.NewMediaGroup(*chatId, chunk)
 		_, err := bot.Send(mediaGroupConfig)
 		if err != nil {
 			log.Fatal("Error sending mediaGroup:", err)

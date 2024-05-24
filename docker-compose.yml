@@ -1,0 +1,39 @@
+services:
+    mongodb:
+        container_name: web-opt-downloader-mongodb
+        image: mongo:latest
+        restart: always
+        ports:
+            - '27017:27017'
+        volumes:
+            - web-opt-mongodb_data:/data/db
+
+    backend:
+        container_name: web-opt-downloader-backend
+        build: ./backend
+        restart: always
+        ports:
+            - '8080:8080'
+        environment:
+            - SERVER_PORT=8080
+            - MONGODB_CONNECTION_STRING=mongodb://mongodb:27017
+            - MONGODB_DATABASE_STRING=opt-mangadownloader-database
+            - MONGODB_COLLECTION_SETTINGS_STRING=opt-mangadownloader-settings
+            - ORIGIN_URL=*
+        depends_on:
+            - mongodb
+
+    frontend:
+        container_name: web-opt-downloader-frontend
+        build: ./frontend
+        restart: always
+        ports:
+            - '3000:3000'
+        environment:
+            - NODE_ENV=production
+            - NEXT_PUBLIC_API_URL=http://backend:8080/api
+        depends_on:
+            - backend
+
+volumes:
+    web-opt-mongodb_data:

@@ -11,17 +11,29 @@ import (
 	"github.com/maikpro/web_opt_mangadownloader/services"
 )
 
-type ResponseData struct {
-	Path string `json:"path"`
+type SavedDirectory struct {
+	ChapterName   string `json:"chapterName"`
+	ChapterNumber uint   `json:"chapterNumber"`
+	Path          string `json:"path"`
 }
 
+// Responds to a HTTP POST Request with a pathvariable to download specific chapter with chapterNumber
+// @Summary downloads chapter from OPT
+// @Description downloads chapter from OPT
+// @Tags chapter
+// @Accept json
+// @Produce json
+// @Param selectedChapter path string true "Selected Chapter"
+// @Param local query string false "should download local"
+// @Param telegram query string false "should send to telegram chat"
+// @Success 200 {object} SavedDirectory
+// @Router /api/chapters/id/{selectedChapter} [post]
 func DownloadChapter(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		log.Println("That's not a POST Request!")
 		http.NotFound(w, r)
 		return
 	}
-	w.Header().Set("Content-Type", "application/json")
 
 	pathVariable := strings.Split(r.URL.Path, "/")
 	chapterNumber := pathVariable[len(pathVariable)-1]
@@ -45,18 +57,37 @@ func DownloadChapter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var path *string
-	for index, page := range chapter.Pages {
-		path, err = services.DownloadPage(page.Url, fmt.Sprintf("../chapters/%d_%s", chapter.Number, chapter.Name), fmt.Sprintf("page_%d", index))
+	queryParams := r.URL.Query()
+
+	queryTelegram := queryParams.Get("telegram")
+	queryLocal := queryParams.Get("local")
+
+	if queryTelegram == "true" {
+		err = services.SendChapter(*chapter)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
 
-	response := ResponseData{
-		Path: *path,
+	if queryLocal == "true" {
+		var path *string
+		for index, page := range chapter.Pages {
+			path, err = services.DownloadPage(page.Url, fmt.Sprintf("../chapters/%d_%s", chapter.Number, chapter.Name), fmt.Sprintf("page_%d", index))
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
+
+		response := SavedDirectory{
+			ChapterName:   chapter.Name,
+			ChapterNumber: chapter.Number,
+			Path:          *path,
+		}
+
+		json.NewEncoder(w).Encode(response)
 	}
 
-	json.NewEncoder(w).Encode(response)
+	w.WriteHeader(http.StatusOK)
 }

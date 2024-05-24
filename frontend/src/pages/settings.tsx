@@ -1,11 +1,25 @@
 import type { Settings } from '@/app/models/Settings';
-import { ChangeEvent, FormEvent, useState } from 'react';
+import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 
 export default function Settings() {
     const [settingsData, setSettingsData] = useState<Settings>({
+        id: '',
         telegramToken: '',
         telegramChatId: '',
     });
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/settings`
+            );
+            const settings: Settings = await response.json();
+            if (settings) {
+                setSettingsData(settings);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
@@ -19,21 +33,43 @@ export default function Settings() {
         e.preventDefault();
         console.log('Save changes...', settingsData);
         try {
-            const response = await fetch(`http://localhost:8080/api/settings`, {
-                method: 'POST',
-                body: JSON.stringify(settingsData),
-            });
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/settings`,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(settingsData),
+                }
+            );
 
             if (response.ok) {
                 console.log('Data sent successfully');
-                // Handle success (e.g., show a success message, clear the form, etc.)
-            } else {
-                console.error('Failed to send data');
-                // Handle error (e.g., show an error message)
+                const savedSettings: Settings = await response.json();
+                setSettingsData(savedSettings);
             }
         } catch (error) {
             console.error('Error:', error);
-            // Handle error (e.g., show an error message)
+        }
+    };
+
+    const update = async (e: FormEvent) => {
+        e.preventDefault();
+        console.log('Update changes...', settingsData);
+        try {
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/settings/id/${settingsData.id}`,
+                {
+                    method: 'PUT',
+                    body: JSON.stringify(settingsData),
+                }
+            );
+
+            if (response.ok) {
+                console.log('Data sent successfully');
+                const updatedSettings: Settings = await response.json();
+                setSettingsData(updatedSettings);
+            }
+        } catch (error) {
+            console.error('Error:', error);
         }
     };
 
@@ -88,15 +124,27 @@ export default function Settings() {
                     </div>
                 </div>
 
-                <button
-                    type="submit"
-                    onClick={save}
-                    className="bg-violet-500 hover:bg-violet-600 text-white font-bold py-2 px-4 rounded flex w-200 items-center"
-                >
-                    <div className="flex items-center">
-                        <span>Save</span>
-                    </div>
-                </button>
+                {settingsData.id ? (
+                    <button
+                        type="submit"
+                        onClick={update}
+                        className="bg-violet-500 hover:bg-violet-600 text-white font-bold py-2 px-4 rounded flex w-200 items-center"
+                    >
+                        <div className="flex items-center">
+                            <span>Update</span>
+                        </div>
+                    </button>
+                ) : (
+                    <button
+                        type="submit"
+                        onClick={save}
+                        className="bg-violet-500 hover:bg-violet-600 text-white font-bold py-2 px-4 rounded flex w-200 items-center"
+                    >
+                        <div className="flex items-center">
+                            <span>Save</span>
+                        </div>
+                    </button>
+                )}
             </form>
         </div>
     );

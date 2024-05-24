@@ -1,6 +1,7 @@
 package models
 
 type Settings struct {
-	TelegramToken  string `json:"telegramToken"`
-	TelegramChatId string `json:"telegramChatId"`
+	ID             string `json:"id" bson:"_id,omitempty"`
+	TelegramToken  string `json:"telegramToken" bson:"telegramtoken"`
+	TelegramChatId string `json:"telegramChatId" bson:"telegramchatid"`
 }
