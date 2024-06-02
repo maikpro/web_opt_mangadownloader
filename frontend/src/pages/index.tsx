@@ -1,37 +1,31 @@
 'use client';
+import Checkbox from '@/components/checkbox/checkbox';
+import { Arc } from '@/models/Arc';
+import { ArcService } from '@/services/arc-service';
 import { ChangeEvent, SetStateAction, useEffect, useState } from 'react';
-
-import { Arc } from '../app/models/Arc';
 
 export default function Home() {
     const [arcs, setArcs] = useState<Arc[]>([]);
     const [selectedChapter, setSelectedChapter] = useState('');
     const [isDownload, setIsDownload] = useState<boolean>(false);
     const [savedPath, setSavedPath] = useState<any>('');
+    const [isTelegram, setIsTelegram] = useState<boolean>(true);
     const [isLocal, setLocal] = useState<boolean>(true);
-    const [isTelegram, setTelegram] = useState<boolean>(true);
 
     useEffect(() => {
-        const fetchArcs = async () => {
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/arcs`
-            );
-            const arcs: Arc[] = await response.json();
+        const getArcs = async () => {
+            const arcs = await ArcService.getArcs();
             setArcs(arcs);
             setSelectedChapter('' + arcs[0].entries[0].number);
         };
-        fetchArcs();
-        const value = process.env.NEXT_PUBLIC_API_URL;
-        console.log(value);
+        getArcs();
     }, []);
 
-    const handleTelegramChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const { checked } = event.target;
-        setTelegram(checked);
+    const handleTelegramChange = (checked: boolean) => {
+        setIsTelegram(checked);
     };
 
-    const handleLocalChange = (event: ChangeEvent<HTMLInputElement>) => {
-        const { checked } = event.target;
+    const handleLocalChange = (checked: boolean) => {
         setLocal(checked);
     };
 
@@ -95,30 +89,19 @@ export default function Home() {
                         ))}
                     </select>
                     <div className="w-full flex justify-between">
-                        <div>
-                            <input
-                                type="checkbox"
-                                name="isLocal"
-                                checked={isLocal}
-                                onChange={handleLocalChange}
-                                disabled={isDownload}
-                            />
-                            <label className="ml-2">
-                                Download on your local drive?
-                            </label>
-                        </div>
-                        <div>
-                            <input
-                                type="checkbox"
-                                name="isTelegram"
-                                checked={isTelegram}
-                                onChange={handleTelegramChange}
-                                disabled={isDownload}
-                            />
-                            <label className="ml-2">
-                                Send to your Telegram Chat
-                            </label>
-                        </div>
+                        <Checkbox
+                            labelText="Download on your local drive?"
+                            isChecked={isLocal}
+                            onChange={handleLocalChange}
+                            isDisabled={isDownload}
+                        />
+
+                        <Checkbox
+                            labelText="Send to your Checked Chat?"
+                            isChecked={isTelegram}
+                            onChange={handleTelegramChange}
+                            isDisabled={isDownload}
+                        />
                     </div>
                     <button
                         onClick={handleDownload}
