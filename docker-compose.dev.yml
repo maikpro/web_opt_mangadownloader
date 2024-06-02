@@ -1,0 +1,16 @@
+name: dev-web-opt-downloader
+services:
+    mongodb:
+        container_name: web-opt-downloader-mongodb
+        image: mongo:latest
+        ports:
+            - '27017:27017'
+        volumes:
+            - web-opt-mongodb_data:/data/db
+
+volumes:
+    web-opt-mongodb_data:
+
+networks:
+    web-opt-network:
+        driver: bridge

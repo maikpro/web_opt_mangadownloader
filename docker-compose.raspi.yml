@@ -1,8 +1,8 @@
-name: web-opt-downloader
+name: raspi-web-opt-downloader
 services:
     mongodb:
         container_name: web-opt-downloader-mongodb
-        image: mongo:latest
+        image: mongo:4.4.18
         ports:
             - '27017:27017'
         volumes:
