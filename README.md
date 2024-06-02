@@ -2,9 +2,10 @@
 
 ## PRODUCTION: run on docker containers
 
-- change `.env.production.example` to `.env.production` and add your `<host_ip>`
-- `docker-compose up -d` in root
-- after containers are up navigate to `http://<host_ip>:3000` to download chapters
+-   `cd frontend`
+-   change `.env.production.example` to `.env.production` and add your `<host_ip>`
+-   `docker-compose up -d` in root
+-   after containers are up navigate to `http://<host_ip>:3000` to download chapters
 
 ## DEVELOPMENT: Backend - API written in GoLang using Standard HTTP Library
 
