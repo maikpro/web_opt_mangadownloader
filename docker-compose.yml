@@ -2,7 +2,6 @@ services:
     mongodb:
         container_name: web-opt-downloader-mongodb
         image: mongo:4.4.18
-        #restart: always
         ports:
             - '27017:27017'
         volumes:
@@ -11,7 +10,6 @@ services:
     backend:
         container_name: web-opt-downloader-backend
         build: ./backend
-        #restart: always
         ports:
             - '8080:8080'
         environment:
@@ -26,7 +24,6 @@ services:
     frontend:
         container_name: web-opt-downloader-frontend
         build: ./frontend
-        #restart: always
         ports:
             - '3000:3000'
         environment:
