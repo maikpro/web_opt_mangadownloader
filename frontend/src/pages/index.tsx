@@ -2,7 +2,7 @@
 import Checkbox from '@/components/checkbox/checkbox';
 import { Arc } from '@/models/Arc';
 import { ArcService } from '@/services/arc-service';
-import { ChangeEvent, SetStateAction, useEffect, useState } from 'react';
+import { SetStateAction, useEffect, useState } from 'react';
 
 export default function Home() {
     const [arcs, setArcs] = useState<Arc[]>([]);
@@ -41,9 +41,6 @@ export default function Home() {
             console.error('No Chapter selected...');
             return;
         }
-        console.log(
-            `You have selected chapter '${selectedChapter}', isLocal '${isLocal}', isTelegram ${isTelegram} `
-        );
         const response = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/chapters/id/${selectedChapter}?local=${isLocal}&telegram=${isTelegram}`,
             { method: 'POST' }

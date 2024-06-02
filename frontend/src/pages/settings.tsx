@@ -1,5 +1,5 @@
-import type { Settings } from '@/app/models/Settings';
 import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
+import type { Settings } from '@/models/Settings';
 
 export default function Settings() {
     const [settingsData, setSettingsData] = useState<Settings>({
