@@ -21,7 +21,6 @@ go.work
 .vscode/*
 
 # project based
-.env
 upload/*
 chapters/*
 example.*

@@ -1,18 +1,20 @@
 # web_opt_mangadownloader
 
-## run on docker containers
+## PRODUCTION: run on docker containers
 
--   `docker-compose up -d` in root
--   after containers are up navigate to `http://localhost:3000`
+- change `.env.production.example` to `.env.production` and add your `<host_ip>`
+- `docker-compose up -d` in root
+- after containers are up navigate to `http://<host_ip>:3000` to download chapters
 
-## Backend - API written in GoLang using Standard HTTP Library
+## DEVELOPMENT: Backend - API written in GoLang using Standard HTTP Library
 
 ### run server
 
 -   change directory to `/backend`
 -   `go run main.go`
+-   server should run on `http://localhost:8080`
 
-### update Open API
+### (optional: update Open API)
 
 -   run `swag init`
 
@@ -20,3 +22,4 @@
 
 -   change directory to `/frontend`
 -   `npm run dev`
+-   frontend should run on `http://localhost:3000`

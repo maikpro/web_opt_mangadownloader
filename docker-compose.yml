@@ -27,8 +27,8 @@ services:
         ports:
             - '3000:3000'
         environment:
+            #Note: After being built, your app will no longer respond to changes to these environment variables. For instance, if you use a Heroku pipeline to promote slugs built in one environment to another environment, or if you build and deploy a single Docker image to multiple environments, all NEXT_PUBLIC_ variables will be frozen with the value evaluated at build time, so these values need to be set appropriately when the project is built. If you need access to runtime environment values, you'll have to setup your own API to provide them to the client (either on demand or during initialization). https://nextjs.org/docs/pages/building-your-application/configuring/environment-variables#bundling-environment-variables-for-the-browser
             - NODE_ENV=production
-            - NEXT_PUBLIC_API_URL=http://backend:8080/api
         depends_on:
             - backend
 
