@@ -1,5 +1,7 @@
 # web_opt_mangadownloader
 
+![Screenshot 28-06-2024](./20240628_demo_screenshot.jpg)
+
 ## PRODUCTION: run on docker containers
 
 -   `cd frontend`
