@@ -5,7 +5,7 @@ import Reddit from '@/components/reddit/reddit';
 
 export default function Home() {
     return (
-        <div>
+        <div className="w-full">
             <Reddit />
             <ChapterPicker />
         </div>

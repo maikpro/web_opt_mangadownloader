@@ -67,7 +67,7 @@ export default function ChapterPicker() {
                     <h1 className="text-xl">Download Chapter:</h1>
 
                     <select
-                        className="bg-slate-50 dark:bg-slate-800 p-3 rounded"
+                        className="w-full bg-slate-50 dark:bg-slate-800 p-3 rounded"
                         value={selectedChapter}
                         onChange={handleSelectChange}
                     >
