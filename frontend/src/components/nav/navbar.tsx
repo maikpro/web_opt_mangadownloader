@@ -1,5 +1,7 @@
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
+import logo from '../../public/images/logo.png';
 
 export default function Navbar() {
     const pathname = usePathname();
@@ -10,6 +12,7 @@ export default function Navbar() {
                     href="/"
                     className="flex items-center space-x-3 rtl:space-x-reverse"
                 >
+                    <Image src={logo} alt="Logo" width={32} height={32} />
                     <h1>Web OPT Downloader</h1>
                 </Link>
 

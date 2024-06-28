@@ -1,6 +1,6 @@
 import type { AppProps } from 'next/app';
-import '../app/globals.css';
-import '../app/favicon.ico';
+import '../public/globals.css';
+import '../public/images/favicon.ico';
 import Layout from '@/components/layout';
 
 export default function MyApp({ Component, pageProps }: AppProps) {
