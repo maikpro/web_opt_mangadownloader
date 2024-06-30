@@ -1,6 +1,7 @@
 import { Constants } from '@/constants/constants';
 import { RedditToken } from '@/models/RedditToken';
 import { v4 as uuid } from 'uuid';
+import { NotifierService } from './notifier-service';
 
 export class RedditService {
     // All bearer tokens expire after 1 hour.
@@ -22,7 +23,9 @@ export class RedditService {
         return `${this.BASE_URL}/authorize?${params.toString()}`;
     }
 
-    public static async fetchRedditToken(code: string): Promise<RedditToken> {
+    public static async fetchRedditToken(
+        code: string
+    ): Promise<RedditToken | null> {
         try {
             const response = await fetch(`${this.BASE_URL}/access_token`, {
                 method: 'POST',
@@ -46,13 +49,17 @@ export class RedditService {
                 );
                 return redditToken;
             }
-            throw Error('response is not 200!');
+            NotifierService.showError('response is not 200!');
+            return null;
         } catch {
-            throw Error('Error creating RedditToken');
+            NotifierService.showError('Error creating RedditToken');
+            return null;
         }
     }
 
-    public static async refreshRedditToken(redditToken: RedditToken) {
+    public static async refreshRedditToken(
+        redditToken: RedditToken
+    ): Promise<RedditToken | null> {
         try {
             const response = await fetch(`${this.BASE_URL}/access_token`, {
                 method: 'POST',
@@ -74,9 +81,11 @@ export class RedditService {
                 );
                 return redditToken;
             }
-            throw Error('response is not 200!');
+            NotifierService.showError('response is not 200!');
+            return null;
         } catch {
-            throw Error('Error creating RedditToken');
+            NotifierService.showError('Error creating RedditToken');
+            return null;
         }
     }
 
@@ -90,7 +99,12 @@ export class RedditService {
 
             if (this.isRedditTokenExpired(redditToken)) {
                 // refresh
-                redditToken = await this.refreshRedditToken(redditToken);
+                const refreshedRedditToken = await this.refreshRedditToken(
+                    redditToken
+                );
+                if (refreshedRedditToken) {
+                    redditToken = refreshedRedditToken;
+                }
             }
 
             return redditToken;
@@ -98,7 +112,9 @@ export class RedditService {
         return null;
     }
 
-    public static async getUsername(redditToken: RedditToken) {
+    public static async getUsername(
+        redditToken: RedditToken
+    ): Promise<string | null> {
         try {
             const response = await fetch(`https://oauth.reddit.com/api/v1/me`, {
                 method: 'GET',
@@ -112,9 +128,11 @@ export class RedditService {
                 const jsonObjects: any = await response.json();
                 return jsonObjects.name;
             }
-            throw Error('response is not 200!');
+            NotifierService.showError('response is not 200!');
+            return null;
         } catch {
-            throw Error('Error getting Username');
+            NotifierService.showError('Error getting Username');
+            return null;
         }
     }
 
@@ -138,9 +156,9 @@ export class RedditService {
                 const jsonObjects: any = await response.json();
                 return jsonObjects.data.children;
             }
-            throw Error('response is not 200!');
+            NotifierService.showError('response is not 200!');
         } catch {
-            throw Error('Error getting Post');
+            NotifierService.showError('Error getting Post');
         }
     }
 

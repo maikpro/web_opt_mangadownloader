@@ -15,8 +15,10 @@ export default function ChapterPicker() {
     useEffect(() => {
         const getArcs = async () => {
             const arcs = await ArcService.getArcs();
-            setArcs(arcs);
-            setSelectedChapter('' + arcs[0].entries[0].number);
+            if (arcs) {
+                setArcs(arcs);
+                setSelectedChapter('' + arcs[0].entries[0].number);
+            }
         };
         getArcs();
     }, []);
