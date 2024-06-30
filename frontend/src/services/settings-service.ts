@@ -23,7 +23,9 @@ export class SettingsService {
         }
     }
 
-    public static async saveSettings(settings: Settings) {
+    public static async saveSettings(
+        settings: Settings
+    ): Promise<Settings | null> {
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/settings`,
@@ -41,12 +43,16 @@ export class SettingsService {
             NotifierService.showError(
                 'response is not 200 by saving settings!'
             );
+            return null;
         } catch (error) {
             NotifierService.showError('Error saving Settings');
+            return null;
         }
     }
 
-    public static async updateSettings(settings: Settings) {
+    public static async updateSettings(
+        settings: Settings
+    ): Promise<Settings | null> {
         try {
             const response = await fetch(
                 `${process.env.NEXT_PUBLIC_API_URL}/settings/id/${settings.id}`,
@@ -64,8 +70,10 @@ export class SettingsService {
             NotifierService.showError(
                 'response is not 200 by updating settings!'
             );
+            return null;
         } catch (error) {
             NotifierService.showError('Error updating Settings');
+            return null;
         }
     }
 }

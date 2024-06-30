@@ -11,7 +11,8 @@ export default function TelegramSettings() {
 
     useEffect(() => {
         const fetchSettings = async () => {
-            const settings: Settings = await SettingsService.getSettings();
+            const settings: Settings | null =
+                await SettingsService.getSettings();
             if (settings) {
                 setSettingsData(settings);
             }
@@ -30,19 +31,22 @@ export default function TelegramSettings() {
     const save = async (e: FormEvent) => {
         e.preventDefault();
 
-        const savedSettings: Settings = await SettingsService.saveSettings(
-            settingsData
-        );
-        setSettingsData(savedSettings);
+        const savedSettings: Settings | null =
+            await SettingsService.saveSettings(settingsData);
+
+        if (savedSettings) {
+            setSettingsData(savedSettings);
+        }
     };
 
     const update = async (e: FormEvent) => {
         e.preventDefault();
 
-        const updatedSettings: Settings = await SettingsService.updateSettings(
-            settingsData
-        );
-        setSettingsData(updatedSettings);
+        const updatedSettings: Settings | null =
+            await SettingsService.updateSettings(settingsData);
+        if (updatedSettings) {
+            setSettingsData(updatedSettings);
+        }
     };
 
     return (
