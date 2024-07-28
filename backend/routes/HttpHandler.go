@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	_ "github.com/maikpro/web_opt_mangadownloader/docs"
 
@@ -53,9 +54,13 @@ func enableCors(next http.Handler) http.Handler {
 			log.Fatal(err)
 			return
 		}
+
+		if !strings.HasPrefix(r.URL.Path, "/api/chapters/id/") {
+			w.Header().Set("Content-Type", "application/json")
+		}
+
 		w.Header().Set("Access-Control-Allow-Origin", origin)
 		w.Header().Set("Access-Control-Allow-Methods", fmt.Sprintf("%s, %s, %s", http.MethodGet, http.MethodPost, http.MethodPut))
-		w.Header().Set("Content-Type", "application/json")
 
 		if r.Method == http.MethodOptions {
 			w.WriteHeader(http.StatusNoContent)

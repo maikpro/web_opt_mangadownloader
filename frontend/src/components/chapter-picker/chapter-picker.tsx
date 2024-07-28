@@ -37,6 +37,18 @@ export default function ChapterPicker() {
         setSelectedChapter(event.target.value);
     };
 
+    const extractFilenameFromResponseHeader = (response: Response): string => {
+        let filename = 'download.zip';
+        const downloadName = response.headers.get('Chapter-Name');
+
+        console.log(response.headers.values());
+
+        if (downloadName) {
+            filename = downloadName;
+        }
+        return filename;
+    };
+
     const handleDownload = async () => {
         setIsDownload(true);
         if (!selectedChapter) {
@@ -53,12 +65,16 @@ export default function ChapterPicker() {
         }
 
         if (response.ok && isLocal) {
-            const path = await response.json();
-            console.log(path);
-            setSavedPath(path);
-            if (path) {
-                setIsDownload(false);
-            }
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = extractFilenameFromResponseHeader(response);
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
         }
     };
 

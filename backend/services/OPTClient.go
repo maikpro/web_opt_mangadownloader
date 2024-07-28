@@ -62,7 +62,23 @@ func GetPageImage(url string) ([]byte, error) {
 	return imageData, nil
 }
 
-func DownloadPage(url string, savePath string, filename string) (*string, error) {
+func DownloadChapter(w http.ResponseWriter, chapter *models.Chapter) (*string, error) {
+	var downloadPath *string
+	var err error
+
+	for index, page := range chapter.Pages {
+		filePath := fmt.Sprintf("../chapters/%d_%s", chapter.Number, chapter.Name)
+		modifiedFilePath := strings.ReplaceAll(filePath, " ", "_")
+		downloadPath, err = downloadPage(page.Url, modifiedFilePath, fmt.Sprintf("page_%d", index))
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return downloadPath, nil
+}
+
+func downloadPage(url string, savePath string, filename string) (*string, error) {
 	imageData, err := GetPageImage(url)
 	if err != nil {
 		return nil, err
@@ -94,7 +110,7 @@ type OPTArc struct {
 	Id   int    `json:"id"`
 	Name string `json:"name"`
 	Min  int    `json:"min"`
-	Max  int    `json:"mAX"`
+	Max  int    `json:"max"`
 }
 
 func GetArcList() ([]models.Arc, error) {

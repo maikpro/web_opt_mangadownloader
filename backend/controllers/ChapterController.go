@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -71,23 +70,39 @@ func DownloadChapter(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if queryLocal == "true" {
-		var path *string
-		for index, page := range chapter.Pages {
-			path, err = services.DownloadPage(page.Url, fmt.Sprintf("../chapters/%d_%s", chapter.Number, chapter.Name), fmt.Sprintf("page_%d", index))
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
+		chapterNameNoSpace := strings.ReplaceAll(chapter.Name, " ", "_")
+		zipFileName := fmt.Sprintf("%s.zip", chapterNameNoSpace)
+
+		downloadPath, err := services.DownloadChapter(w, chapter)
+		if err != nil {
+			log.Println(err)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
 		}
 
-		response := SavedDirectory{
-			ChapterName:   chapter.Name,
-			ChapterNumber: chapter.Number,
-			Path:          *path,
+		log.Printf("downloaded to %s", *downloadPath)
+
+		// create zip
+		buf, err := services.CreateZip(*downloadPath)
+		if err != nil {
+			log.Fatalf("cannot create zip: %s", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
 
-		json.NewEncoder(w).Encode(response)
+		w.Header().Set("Content-Type", "application/zip")
+		w.Header().Set("Content-Disposition", "attachment; filename="+zipFileName)
+		w.Header().Set("Content-Length", strconv.Itoa(len(buf.Bytes())))
+		w.Header().Set("Access-Control-Expose-Headers", "Chapter-Name")
+		w.Header().Set("Chapter-Name", fmt.Sprintf("%d_%s", chapterNumberInt, chapterNameNoSpace))
+
+		_, err = buf.WriteTo(w)
+		if err != nil {
+			log.Fatalln("cannot write buffer to writer...")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
-	w.WriteHeader(http.StatusOK)
+	// w.WriteHeader(http.StatusOK)
 }
