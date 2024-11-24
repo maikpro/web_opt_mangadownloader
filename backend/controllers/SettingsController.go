@@ -5,20 +5,11 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"strings"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/maikpro/web_opt_mangadownloader/models"
 	"github.com/maikpro/web_opt_mangadownloader/services"
 )
-
-func SettingsHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		getSettings(w, r)
-	case http.MethodPost:
-		saveSettings(w, r)
-	}
-}
 
 // GetSettings returns saved Settings.
 // @Summary saved settings
@@ -28,7 +19,7 @@ func SettingsHandler(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Success 200 {object} models.Settings
 // @Router /api/settings [get]
-func getSettings(w http.ResponseWriter, r *http.Request) {
+func GetSettings(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	settings, err := services.GetSettings()
 	if err != nil {
 		http.Error(w, "Failed to get settings", http.StatusInternalServerError)
@@ -48,7 +39,7 @@ func getSettings(w http.ResponseWriter, r *http.Request) {
 // @Param settings body models.Settings true "Settings to save"
 // @Success 200 {object} models.Settings
 // @Router /api/settings [post]
-func saveSettings(w http.ResponseWriter, r *http.Request) {
+func SaveSettings(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
@@ -86,7 +77,7 @@ func saveSettings(w http.ResponseWriter, r *http.Request) {
 // @Param settings body models.Settings true "Settings to update"
 // @Success 200 {object} models.Settings
 // @Router /api/settings/id/{settingsId} [put]
-func UpdateSettings(w http.ResponseWriter, r *http.Request) {
+func UpdateSettings(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	if r.Method != http.MethodPut {
 		log.Println("That's not a PUT Request!")
 		http.NotFound(w, r)
@@ -94,8 +85,9 @@ func UpdateSettings(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Println("UPDATE...")
-	pathVariable := strings.Split(r.URL.Path, "/")
-	settingsId := pathVariable[len(pathVariable)-1]
+	//pathVariable := strings.Split(r.URL.Path, "/")
+	//settingsId := pathVariable[len(pathVariable)-1]
+	settingsId := ps.ByName("id")
 
 	if len(settingsId) == 0 {
 		http.Error(w, "Path variable 'id' is required", http.StatusBadRequest)

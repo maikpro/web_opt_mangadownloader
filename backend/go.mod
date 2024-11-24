@@ -63,6 +63,7 @@ require (
 	github.com/charmbracelet/huh/spinner v0.0.0-20240429193246-147e30b8a09c
 	github.com/go-telegram-bot-api/telegram-bot-api v4.6.4+incompatible
 	github.com/joho/godotenv v1.5.1
+	github.com/julienschmidt/httprouter v1.3.0
 	go.mongodb.org/mongo-driver v1.15.0
 	golang.org/x/net v0.25.0 // indirect
 )

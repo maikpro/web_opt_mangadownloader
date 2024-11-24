@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/julienschmidt/httprouter"
+
 	_ "github.com/maikpro/web_opt_mangadownloader/docs"
 
 	"github.com/maikpro/web_opt_mangadownloader/controllers"
@@ -16,22 +18,26 @@ import (
 const root = "/api"
 
 func HandleHttp() {
-	mux := http.NewServeMux()
-	handler := enableCors(mux)
+	router := httprouter.New()
+	handler := enableCors(router)
 
 	// Serve Swagger UI
-	mux.HandleFunc("/", redirectHandler)
-	mux.HandleFunc("/api/", redirectHandler)
-	mux.Handle("/swagger/", httpSwagger.WrapHandler)
+	router.GET("/", redirectHandler)
+	router.GET("/api/", redirectHandler)
+	router.GET("/swagger/", func(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+		httpSwagger.WrapHandler.ServeHTTP(w, r)
+	})
 
-	mux.HandleFunc(fmt.Sprintf("%s/health", root), controllers.GetHealthCheck)
+	router.GET(fmt.Sprintf("%s/health", root), controllers.GetHealthCheck)
 
-	mux.HandleFunc(fmt.Sprintf("%s/arcs", root), controllers.GetArcs)
+	router.GET(fmt.Sprintf("%s/arcs", root), controllers.GetArcs)
 
-	mux.HandleFunc(fmt.Sprintf("%s/chapters/id/", root), controllers.DownloadChapter)
+	router.POST(fmt.Sprintf("%s/chapters/id/:id", root), controllers.DownloadChapter)
+	router.GET(fmt.Sprintf("%s/chapters/id/:id", root), controllers.ViewChapterPage)
 
-	mux.HandleFunc(fmt.Sprintf("%s/settings", root), controllers.SettingsHandler)
-	mux.HandleFunc(fmt.Sprintf("%s/settings/id/", root), controllers.UpdateSettings)
+	router.GET(fmt.Sprintf("%s/settings", root), controllers.GetSettings)
+	router.POST(fmt.Sprintf("%s/settings", root), controllers.SaveSettings)
+	router.PUT(fmt.Sprintf("%s/settings/id/:id", root), controllers.UpdateSettings)
 
 	port, err := util.GetEnvString("SERVER_PORT")
 	if err != nil {
@@ -71,6 +77,6 @@ func enableCors(next http.Handler) http.Handler {
 	})
 }
 
-func redirectHandler(w http.ResponseWriter, r *http.Request) {
+func redirectHandler(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	http.Redirect(w, r, "/swagger/", http.StatusPermanentRedirect)
 }

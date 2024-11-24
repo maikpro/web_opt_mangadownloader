@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/maikpro/web_opt_mangadownloader/services"
 )
 
@@ -16,7 +17,7 @@ import (
 // @Produce json
 // @Success 200 {object} []models.Arc
 // @Router /api/arcs [get]
-func GetArcs(w http.ResponseWriter, r *http.Request) {
+func GetArcs(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.Method != http.MethodGet {
 		log.Println("That's not a GET Request!")
 		http.NotFound(w, r)
