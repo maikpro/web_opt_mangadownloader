@@ -9,6 +9,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	_ "github.com/maikpro/web_opt_mangadownloader/docs"
+	"github.com/maikpro/web_opt_mangadownloader/services"
 
 	"github.com/maikpro/web_opt_mangadownloader/controllers"
 	"github.com/maikpro/web_opt_mangadownloader/util"
@@ -28,13 +29,22 @@ func HandleHttp() {
 		httpSwagger.WrapHandler.ServeHTTP(w, r)
 	})
 
+	// HealthController
 	router.GET(fmt.Sprintf("%s/health", root), controllers.GetHealthCheck)
 
-	router.GET(fmt.Sprintf("%s/arcs", root), controllers.GetArcs)
+	// OPTClient dependency
+	var optClient services.IOPTClient = &services.OPTClient{}
 
-	router.POST(fmt.Sprintf("%s/chapters/id/:id", root), controllers.DownloadChapter)
-	router.GET(fmt.Sprintf("%s/chapters/id/:id", root), controllers.ViewChapterPage)
+	// ArcController
+	arcController := controllers.ArcController{OptClient: optClient}
+	router.GET(fmt.Sprintf("%s/arcs", root), arcController.GetArcs)
 
+	// ChapterController
+	chapterContoller := controllers.ChapterController{OptClient: optClient}
+	router.GET(fmt.Sprintf("%s/chapters/id/:id", root), chapterContoller.GetChapter)
+	router.POST(fmt.Sprintf("%s/chapters/id/:id", root), chapterContoller.DownloadChapter)
+
+	// SettingsController
 	router.GET(fmt.Sprintf("%s/settings", root), controllers.GetSettings)
 	router.POST(fmt.Sprintf("%s/settings", root), controllers.SaveSettings)
 	router.PUT(fmt.Sprintf("%s/settings/id/:id", root), controllers.UpdateSettings)

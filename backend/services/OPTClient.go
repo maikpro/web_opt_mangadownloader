@@ -14,10 +14,37 @@ import (
 	"github.com/maikpro/web_opt_mangadownloader/models"
 )
 
-func GetChapter(chapterNumber uint) (*models.Chapter, error) {
+type IOPTClient interface {
+	GetChapter(chapterNumber uint) (*models.Chapter, error)
+	DownloadChapter(chapter *models.Chapter) (*string, error)
+	GetArcList() ([]models.Arc, error)
+}
+
+type OPTClient struct{}
+
+type ChapterWrapper struct {
+	Chapter models.Chapter `json:"chapter"`
+}
+
+type OPTListData struct {
+	Arcs    []OPTArc          `json:"arcs"`
+	Entries []models.OPTEntry `json:"entries"`
+}
+
+// {"id":41,"name":"Egghead Arc","min":1058,"max":1113}
+type OPTArc struct {
+	Id   int    `json:"id"`
+	Name string `json:"name"`
+	Min  int    `json:"min"`
+	Max  int    `json:"max"`
+}
+
+func (optClient *OPTClient) GetChapter(chapterNumber uint) (*models.Chapter, error) {
 	// note: One-Piece-Tube does not provide Manga from Chapter 1 - 419
 	if chapterNumber < 420 {
-		return nil, errors.New("onepiece-tube.com does not provide Manga from Chapter 1 - 419")
+		err := errors.New("OPTClient: onepiece-tube.com does not provide Manga from Chapter 1 - 419")
+		log.Fatal(err.Error())
+		return nil, err
 	}
 
 	url := fmt.Sprintf("https://onepiece-tube.com/manga/kapitel/%d", chapterNumber)
@@ -40,29 +67,22 @@ func GetChapter(chapterNumber uint) (*models.Chapter, error) {
 	}
 
 	scriptRawText := doc.Find("#app > script").First().Text()
-	jsonString := strings.Replace(strings.Split(scriptRawText, "=")[1], ";", "", -1)
-	var newjson models.Data
-	json.Unmarshal([]byte(jsonString), &newjson)
-	chapter := &newjson.Chapter
+	// scriptRawText: window.__data = {"chapter":{"name":"Keine Spur von Zorro","pages":[{"url":"https:\/\/onepiece.tube\/upload\/manga\/kapitel\/0512-515\/01.jpg","height":1200,"width":826,"type":"image\/jpeg"}, ...
+	parsedJsonString := strings.Replace(strings.Split(scriptRawText, "=")[1], ";", "", -1)
+
+	var chapterWrapper ChapterWrapper
+	err = json.Unmarshal([]byte(parsedJsonString), &chapterWrapper)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+	chapter := &chapterWrapper.Chapter
 	chapter.Number = chapterNumber
+
 	return chapter, nil
 }
 
-func GetPageImage(url string) ([]byte, error) {
-	response, err := http.Get(url)
-	if err != nil {
-		fmt.Println("Error downloading file:", err)
-		return nil, err
-	}
-	defer response.Body.Close()
-	imageData, err := io.ReadAll(response.Body)
-	if err != nil {
-		return nil, err
-	}
-	return imageData, nil
-}
-
-func DownloadChapter(w http.ResponseWriter, chapter *models.Chapter) (*string, error) {
+func (optClient *OPTClient) DownloadChapter(chapter *models.Chapter) (*string, error) {
 	var downloadPath *string
 	var err error
 
@@ -78,8 +98,22 @@ func DownloadChapter(w http.ResponseWriter, chapter *models.Chapter) (*string, e
 	return downloadPath, nil
 }
 
+func getPageImage(url string) ([]byte, error) {
+	response, err := http.Get(url)
+	if err != nil {
+		fmt.Println("Error downloading file:", err)
+		return nil, err
+	}
+	defer response.Body.Close()
+	imageData, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+	return imageData, nil
+}
+
 func downloadPage(url string, savePath string, filename string) (*string, error) {
-	imageData, err := GetPageImage(url)
+	imageData, err := getPageImage(url)
 	if err != nil {
 		return nil, err
 	}
@@ -100,20 +134,7 @@ func downloadPage(url string, savePath string, filename string) (*string, error)
 	return &folderPath, err
 }
 
-type OPTListData struct {
-	Arcs    []OPTArc          `json:"arcs"`
-	Entries []models.OPTEntry `json:"entries"`
-}
-
-// {"id":41,"name":"Egghead Arc","min":1058,"max":1113}
-type OPTArc struct {
-	Id   int    `json:"id"`
-	Name string `json:"name"`
-	Min  int    `json:"min"`
-	Max  int    `json:"max"`
-}
-
-func GetArcList() ([]models.Arc, error) {
+func (optClient *OPTClient) GetArcList() ([]models.Arc, error) {
 	res, err := http.Get("https://onepiece-tube.com/manga/kapitel-mangaliste")
 	if err != nil {
 		log.Fatal(err)
