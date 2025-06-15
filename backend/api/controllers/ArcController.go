@@ -13,14 +13,6 @@ type ArcController struct {
 	OptClient services.IOPTClient
 }
 
-// Responds to a HTTP GET Request with all Arcs + Chapters fetched from OnePiece-Tube.com
-// @Summary fetches Arcs from OPT
-// @Description delivers Arcs from OPT
-// @Tags arcs
-// @Accept json
-// @Produce json
-// @Success 200 {object} []models.Arc
-// @Router /api/arcs [get]
 func (arcController *ArcController) GetArcs(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
 	if r.Method != http.MethodGet {
 		log.Println("That's not a GET Request!")
